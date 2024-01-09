@@ -48,9 +48,9 @@ composer require laragear/refine
 
 ## Usage
 
-THis packages solves the problem of refining a query using the request query keys, by moving that logic out of the controller.
+This package solves the problem of refining a Databse Query using the HTTP Request by moving that logic out of the controller.
 
-For example, imagine you want to show the post made by a given author ID. Normally, you would check that on the controller and modify the query inside.
+For example, imagine you want to show all the Posts made by a given Author ID. Normally, you would check that on the controller and modify the query inside.
 
 ```php
 use App\Models\Post;
@@ -58,13 +58,17 @@ use Illuminate\Http\Request;
 
 public function all(Request $request)
 {
+    $request->validate([
+        'author_id' => 'sometimes|integer'
+    ]);
+
     return Post::when($request->has('author_id'), function ($query) {
         $query->where('author_id', $request->get('author_id'));
-    });        
+    });
 }
 ```
 
-While this is inoffensive, it will add up as more refinements are present in the request: published at a given time, with a given set of tags, ordering, etc. Eventually it will clutter your controller.
+While this is inoffensive, it will add up as more refinements are needed: published at a given time, with a given set of tags, ordering, etc. Eventually it will clutter your controller.
 
 Instead, Laragear Refine moves that logic to its own "Refiner" object.
 
@@ -112,7 +116,7 @@ namespace App\Http\Refiners;
 
 use Laragear\Refine\Refiner;
 
-class PostRefiner extends PostRefiner
+class PostRefiner extends Refiner
 {
     /**
      * Create a new post query filter instance.
@@ -124,13 +128,13 @@ class PostRefiner extends PostRefiner
 }
 ```
 
-As you can see, apart from the constructor, the class is mostly empty. The next step is to define methods to match the request keys. 
+As you can see, apart from the constructor, the class is empty. The next step is to define methods to match the request keys. 
 
 ### Defining methods
 
 Methods will be executed as long the Request key of the same name is present. Keys are normalized to `camelCase` to match the corresponding method.
 
-All methods you set in the Refiner class receive the Query Builder instance, the value from the request, and the Request instance itself. Inside each method, you're free to modify the Query Builder as you see fit, or even call authorization gates.
+All methods you set in the Refiner class receive the Query Builder instance, the value from the request, and the Request instance itself. Inside each method, you're free to modify the Query Builder as you see fit, or even call authorization gates or check the user permissions.
 
 ```php
 namespace App\Http\Refiners;
@@ -145,7 +149,7 @@ class PostRefiner extends Refiner
     {
         // Only apply the filter if the user has permission to see all posts.
         if ($request->user()->can('view any', Post::class)) {
-            $query->where('author_id', $value);        
+            $query->where('author_id', $value);
         }
     }
 }
@@ -153,7 +157,7 @@ class PostRefiner extends Refiner
 
 ### Only some keys
 
-Requests can have many query, but you may want to limit which of these keys respective methods will be executed if present. To do that, use the `getKeys()` method, and return that set of keys. It also receives the HTTP Request instance.
+By default, the Refiner will check all keys of the request query. You may want to limit which of these keys respective methods will be executed if present. To do that, use the `getKeys()` method, and return that set of keys.
 
 ```php
 use Illuminate\Http\Request;
@@ -186,7 +190,7 @@ public function getKeys(Request $request): array
 
 ### Dependency Injection
 
-The filter class is always resolved using the application container. You can type-hint any dependency in the class constructor and use it later on the matching methods.
+The Refiner class is always resolved using the application container. You can type-hint any dependency in the class constructor and use it later on the matching methods.
 
 ```php
 namespace App\Http\Refiners;
@@ -211,7 +215,7 @@ class PostRefiner extends Refiner
 }
 ```
 
-## Applying a Filter
+## Applying a Refiner
 
 In your Builder instance, simply call `refineBy()` with the name of the Refiner class (or its alias if you registered it on the application container) to apply to the query.
 
@@ -225,14 +229,18 @@ Post::refineBy(PostRefiner::class)->paginate();
 The `refineBy()` is a macro registered to the Eloquent Builder and the base Query Builder, and you can use it even after your own refinements.
 
 ```php
+use App\Http\Requests\PostRequest;
 use Illuminate\Support\Facades\DB;
 use App\Http\Refiners\PostRefiner;
 
-DB::table('posts')
-    ->whereNull('deleted_at')
-    ->refineBy(PostRefiner::class)
-    ->limit(10)
-    ->get();
+public function rawPosts(PostRequest $request)
+{
+    return DB::table('posts')
+        ->whereNull('deleted_at')
+        ->refineBy(PostRefiner::class)
+        ->limit(10)
+        ->get();
+}
 ```
 
 ### Custom keys
