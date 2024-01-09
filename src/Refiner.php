@@ -42,4 +42,40 @@ abstract class Refiner
     {
         //
     }
+
+    /**
+     * Return the validation rules
+     *
+     * @return string[]|array[]
+     */
+    public function validationRules(): array
+    {
+        return [
+            // ...
+        ];
+    }
+
+    /**
+     * Return the validation messages.
+     *
+     * @return array
+     */
+    public function validationMessages(): array
+    {
+        return [
+            // ...
+        ];
+    }
+
+    /**
+     * Return the validation custom attributes.
+     *
+     * @return array
+     */
+    public function validationCustomAttributes(): array
+    {
+        return [
+            // ...
+        ];
+    }
 }

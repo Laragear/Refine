@@ -215,6 +215,27 @@ class PostRefiner extends Refiner
 }
 ```
 
+### Validation
+
+You may also include validation logic into your Refiner by implementing the `ValidateRefiner` interface. From there, you should set your validation rules, and optionally your messages and custom attributes.
+
+Validation rules will run verbatim over the Request Query (not the input), so if you expect a key to always be required in the query, the `validationRules()` is an excellent place to do it.
+
+```php
+use Laragear\Refine\Contracts\ValidatesRefiner;
+use Laragear\Refine\Refiner;
+
+class PostRefiner extends Refiner implements ValidatesRefiner
+{
+    // ...
+    
+    public function validationRules(): array
+    {
+        return ['author_id' => 'required|integer'];
+    }
+}
+```
+
 ## Applying a Refiner
 
 In your Builder instance, simply call `refineBy()` with the name of the Refiner class (or its alias if you registered it on the application container) to apply to the query.
