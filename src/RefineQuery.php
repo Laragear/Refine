@@ -5,23 +5,20 @@ namespace Laragear\Refine;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionClass;
 use ReflectionMethod;
 use function app;
-use function array_diff;
 use function array_flip;
 use function array_values;
-use function dump;
 use function get_class;
 use function get_class_methods;
-use function in_array;
 use function is_string;
 
 /**
  * @internal
+ * @phpstan-consistent-constructor
  */
 class RefineQuery
 {
@@ -166,6 +163,7 @@ class RefineQuery
         Refiner|string $refiner,
         array $keys = null
     ): Builder|EloquentBuilder {
+        // @
         $instance = new static($builder, app('request'), is_string($refiner) ? app($refiner) : $refiner);
 
         $instance->match($keys);
