@@ -1,0 +1,63 @@
+{
+    "name": "laragear/refine",
+    "description": "Filter a database query using the request query keys and matching methods.",
+    "type": "library",
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Italo Baeza C.",
+            "email": "DarkGhostHunter@Gmail.com",
+            "homepage": "https://github.com/sponsors/DarkGhostHunter"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/laragear/refine",
+        "issues": "https://github.com/laragear/refine/issues"
+    },
+    "require": {
+        "php": "^8.1",
+        "illuminate/http": "9.*|10.*",
+        "illuminate/database": "9.*|10.*",
+        "illuminate/console": "9.*|10.*"
+    },
+    "require-dev": {
+        "laragear/meta-testing": "^1.3",
+        "orchestra/testbench": "^7.39|^8.19"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laragear\\Refine\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit --coverage-clover build/logs/clover.xml",
+        "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Laragear\\Refine\\RefineServiceProvider"
+            ]
+        }
+    },
+    "funding": [
+        {
+            "type": "Github Sponsorship",
+            "url": "https://github.com/sponsors/DarkGhostHunter"
+        },
+        {
+            "type": "Paypal",
+            "url": "https://paypal.me/darkghosthunter"
+        }
+    ]
+}

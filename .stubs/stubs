@@ -1,0 +1,41 @@
+<?php
+
+namespace Illuminate\Database\Query
+{
+    use Laragear\Refine\Refiner;
+
+    class Builder
+    {
+        /**
+         * Filter the Query using the current request and a filter class.
+         *
+         * @param  \Laragear\Refine\Refiner|string  $refiner
+         * @param  array|null  $keys
+         * @return $this
+         */
+        public function refineBy(Refiner|string $refiner, array $keys = null): static
+        {
+            //
+        }
+    }
+}
+
+namespace Illuminate\Database\Eloquent
+{
+    use Laragear\Refine\Refiner;
+
+    class Builder
+    {
+        /**
+         * Filter the Query using the current request and a filter class.
+         *
+         * @param  \Laragear\Refine\Refiner|string  $refiner
+         * * @param  array|null  $keys
+         * * @return $this
+         */
+        public function refineBy(Refiner|string $refiner, array $keys = null): static
+        {
+            //
+        }
+    }
+}
