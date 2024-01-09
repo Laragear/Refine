@@ -33,6 +33,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_calls_run_before_with_request_and_builder(Closure $getQuery): void
@@ -48,6 +49,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_calls_run_after_with_request_and_builder(Closure $getQuery): void
@@ -64,6 +66,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_methods_from_request(Closure $getQuery): void
@@ -83,6 +86,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_method_using_camel_Case(Closure $getQuery): void
@@ -102,6 +106,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_doesnt_calls_non_callable_methods(Closure $getQuery): void
@@ -121,6 +126,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_doesnt_calls_refiner_included_methods(Closure $getQuery): void
@@ -138,6 +144,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_methods_from_request_using_custom_keys(Closure $getQuery): void
