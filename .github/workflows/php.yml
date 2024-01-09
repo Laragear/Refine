@@ -13,7 +13,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout code"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Check file permissions"
         run: |
@@ -33,7 +33,7 @@ jobs:
           tools: "parallel-lint"
 
       - name: "Checkout code"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Validate Composer configuration"
         run: "composer validate --strict"
@@ -70,7 +70,7 @@ jobs:
           coverage: "xdebug"
 
       - name: "Checkout code"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Install dependencies"
         uses: "ramsey/composer-install@v2"
@@ -83,6 +83,8 @@ jobs:
 
       - name: "Upload coverage to Codecov"
         uses: "codecov/codecov-action@v3"
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   static_analysis:
     name: "3️⃣ Static Analysis"
@@ -115,7 +117,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout code"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Check exported files"
         run: |
