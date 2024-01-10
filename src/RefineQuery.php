@@ -124,7 +124,7 @@ class RefineQuery
             // Remove all items which method are part of the abstract refiner object.
             ->diffKeys(array_flip($this->getRefinerClassMethods()))
             // Transforms all items into $method => $value
-            ->map(static function (string $key) use ($request): string {
+            ->map(static function (string $key) use ($request): string|array|null {
                 return $request->query($key);
             })
             ->toArray();
