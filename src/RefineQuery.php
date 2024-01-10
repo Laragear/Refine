@@ -111,12 +111,22 @@ class RefineQuery
     protected function queryValuesFromRequest(Request $request, ?array $keys): array
     {
         return Collection::make($keys ?? $this->getKeysFromRefiner($this->request))
-            ->mapWithKeys(static function ($key): array {
+            // Transforms all items to $method => $key
+            ->mapWithKeys(static function (string $key): array {
                 return [Str::camel($key) => $key];
             })
+            // Remove all keys that are not present in the request query.
+            ->filter(static function (string $key) use ($request): bool {
+                return null !== $request->query($key);
+            })
+            // Keep all items which method is present in the refiner object.
             ->intersectByKeys(array_flip($this->getPublicMethodsFromRefiner()))
+            // Remove all items which method are part of the abstract refiner object.
             ->diffKeys(array_flip($this->getRefinerClassMethods()))
-            ->map([$request, 'query'])
+            // Transforms all items into $method => $value
+            ->map(static function (string $key) use ($request): string {
+                return $request->query($key);
+            })
             ->toArray();
     }
 
