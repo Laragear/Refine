@@ -88,7 +88,7 @@ class RefineQuery
             })
             // Remove all keys that are not present in the request query.
             ->filter(static function (string $key) use ($request): bool {
-                return $request->query($key, false) !== false;
+                return null !== $request->query($key);
             })
             // Keep all items which method is present in the refiner object.
             ->intersectByKeys(array_flip($this->getPublicMethodsFromRefiner()))
