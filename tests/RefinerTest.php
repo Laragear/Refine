@@ -40,11 +40,11 @@ class RefinerTest extends TestCase
     {
         $builder = $getQuery();
 
-        $this->partialMock(MockRefiner::class, function (MockInterface  $mock) use ($builder): void {
-            $mock->shouldReceive('runBefore')->with($builder, $this->app->make('request'))->once();
-        });
+        $mock = $this->partialMock(MockRefiner::class);
 
         $builder->refineBy(MockRefiner::class);
+
+        $mock->shouldHaveReceived('runBefore')->with($builder, $this->app->make('request'))->once();
     }
 
     /**
@@ -56,13 +56,12 @@ class RefinerTest extends TestCase
     {
         $builder = $getQuery();
 
-        $this->partialMock(MockRefiner::class, function (MockInterface  $mock) use ($builder): void {
-            $mock->shouldReceive('runAfter')->with($builder, $this->app->make('request'))->once();
-        });
+        $mock = $this->partialMock(MockRefiner::class);
 
         $builder->refineBy(MockRefiner::class);
-    }
 
+        $mock->shouldHaveReceived('runAfter')->with($builder, $this->app->make('request'))->once();
+    }
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
@@ -75,13 +74,13 @@ class RefinerTest extends TestCase
 
         $builder = $getQuery();
 
-        $this->partialMock(MockRefiner::class, function (MockInterface  $mock) use ($builder): void {
-            $mock->shouldReceive('foo')->with($builder, 1, $this->app->make('request'))->once();
-            $mock->shouldReceive('bar')->with($builder, 2, $this->app->make('request'))->once();
-            $mock->shouldNotReceive('quz');
-        });
+        $mock = $this->partialMock(MockRefiner::class);
 
         $builder->refineBy(MockRefiner::class);
+
+        $mock->shouldHaveReceived('foo')->with($builder, 1, $this->app->make('request'))->once();
+        $mock->shouldHaveReceived('bar')->with($builder, 2, $this->app->make('request'))->once();
+        $mock->shouldNotHaveReceived('quz');
     }
 
     /**
@@ -95,13 +94,13 @@ class RefinerTest extends TestCase
 
         $builder = $getQuery();
 
-        $this->partialMock(MockCamelCaseRefiner::class, function (MockInterface  $mock) use ($builder): void {
-            $mock->shouldReceive('fooBar')->with($builder, 1, $this->app->make('request'))->once();
-            $mock->shouldReceive('barQuz')->with($builder, 2, $this->app->make('request'))->once();
-            $mock->shouldReceive('qUZFOX')->with($builder, 3, $this->app->make('request'))->once();
-        });
+        $mock = $this->partialMock(MockCamelCaseRefiner::class);
 
         $builder->refineBy(MockCamelCaseRefiner::class);
+
+        $mock->shouldhaveReceived('fooBar')->with($builder, 1, $this->app->make('request'))->once();
+        $mock->shouldhaveReceived('barQuz')->with($builder, 2, $this->app->make('request'))->once();
+        $mock->shouldhaveReceived('qUZFOX')->with($builder, 3, $this->app->make('request'))->once();
     }
 
     /**
@@ -113,15 +112,16 @@ class RefinerTest extends TestCase
     {
         $this->mockRequest(['__construct' => 1, 'protected' => 2, 'static' => 3, '__destruct' => 4]);
 
-        $this->partialMock(MockVariedMethodsRefiner::class, function (MockInterface  $mock): void {
+        $mock = $this->partialMock(MockVariedMethodsRefiner::class, function (MockInterface  $mock): void {
             $mock->shouldAllowMockingProtectedMethods();
-            $mock->shouldNotReceive('__construct');
-            $mock->shouldNotReceive('protected');
-            $mock->shouldNotReceive('static');
-            $mock->shouldNotReceive('__destruct');
         });
 
         $getQuery()->refineBy(MockVariedMethodsRefiner::class);
+
+        $mock->shouldNotHaveReceived('__construct');
+        $mock->shouldNotHaveReceived('protected');
+        $mock->shouldNotHaveReceived('static');
+        $mock->shouldNotHaveReceived('__destruct');
     }
 
     /**
@@ -133,13 +133,13 @@ class RefinerTest extends TestCase
     {
         $this->mockRequest(['get-keys' => 1, 'run-before' => 2, 'run-after' => 4]);
 
-        $this->partialMock(MockVariedMethodsRefiner::class, function (MockInterface  $mock): void {
-            $mock->shouldNotReceive('getKeys');
-            $mock->shouldNotReceive('runBefore');
-            $mock->shouldNotReceive('runAfter');
-        });
+        $mock = $this->partialMock(MockVariedMethodsRefiner::class);
 
         $getQuery()->refineBy(MockRefiner::class);
+
+        $mock->shouldNotHaveReceived('getKeys');
+        $mock->shouldNotHaveReceived('runBefore');
+        $mock->shouldNotHaveReceived('runAfter');
     }
 
     /**
@@ -153,13 +153,13 @@ class RefinerTest extends TestCase
 
         $builder = $getQuery();
 
-        $this->partialMock(MockRefiner::class, function (MockInterface  $mock) use ($builder): void {
-            $mock->shouldNotReceive('foo');
-            $mock->shouldReceive('bar')->with($builder, 2, $this->app->make('request'))->once();
-            $mock->shouldNotReceive('quz');
-        });
+        $mock = $this->partialMock(MockRefiner::class);
 
         $builder->refineBy(MockRefiner::class, ['bar']);
+
+        $mock->shouldHaveReceived('bar')->with($builder, 2, $this->app->make('request'))->once();
+        $mock->shouldNotHaveReceived('foo');
+        $mock->shouldNotHaveReceived('quz');
     }
 }
 
