@@ -2,11 +2,14 @@
 
 namespace Laragear\Refine;
 
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Foundation\Precognition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Laragear\Refine\Contracts\ValidatesRefiner;
 use ReflectionClass;
 use ReflectionMethod;
 use function app;
@@ -64,12 +67,38 @@ class RefineQuery
 
         $this->refiner->runBefore($this->builder, $request);
 
+        if ($this->refiner instanceof ValidatesRefiner) {
+            $this->validateRefiner();
+        }
+
         // Take only the query keys that are going to be matched and run them.
         foreach ($this->queryValuesFromRequest($request, $keys) as $method => $value) {
             $this->refiner->{$method}($this->builder, $value, $request);
         }
 
         $this->refiner->runAfter($this->builder, $request);
+    }
+
+    /**
+     * Validate the refiner.
+     *
+     * @return void
+     */
+    protected function validateRefiner()
+    {
+        $validator = app(ValidationFactory::class)->make(
+            $this->request->query(),
+            $this->refiner->validationRules(),
+            $this->refiner->validationMessages(),
+            $this->refiner->validationCustomAttributes()
+        );
+
+        if ($this->request->isPrecognitive()) {
+            $validator->after(Precognition::afterValidationHook($this->request))
+                ->setRules($this->request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders()));
+        }
+
+        $validator->validate();
     }
 
     /**
