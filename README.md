@@ -35,8 +35,7 @@ Your support allows me to keep this package free, up-to-date and maintainable. A
 
 ## Requirements
 
-* PHP 8 or later.
-* Laravel 9, 10 or later.
+* Laravel 10 or later.
 
 ## Installation
 
@@ -48,7 +47,7 @@ composer require laragear/refine
 
 ## Usage
 
-This package solves the problem of refining a Databse Query using the HTTP Request by moving that logic out of the controller.
+This package solves the problem of refining a Database Query using the HTTP Request by moving that logic out of the controller.
 
 For example, imagine you want to show all the Posts made by a given Author ID. Normally, you would check that on the controller and modify the query inside.
 
@@ -83,7 +82,7 @@ public function all(Request $request)
 }
 ```
 
-The magic is simple: the refiner methods will be executed as long the key of the same name is present in the Request. Keys are automatically normalized to `camelCase` so these match the method, so `author_id` will become `authorId()`.
+The magic is simple: the refiner methods will be executed as long the key of the same name is present in the Request. Keys are automatically normalized to `camelCase` so these match the method, so `author_id` will run the method `authorId()`.
 
 ```http request
 GET https://myapp.com/posts?author_id=20
@@ -185,6 +184,27 @@ public function getKeys(Request $request): array
     }
     
     return array_keys($request->keys());
+}
+```
+
+### Obligatory keys
+
+Sometimes you will want to execute a method even if a key on the Request query is missing. You can set which methods should always run using `getObligatoryKeys()` method. If any of these keys is not present, the method will receive `null` as the value.
+
+```php
+use Illuminate\Http\Request;
+use Illuminate\Foundation\Http\FormRequest;
+
+public function getObligatoryKeys(Request $request): array
+{
+    return ['tags'];
+}
+
+public function tags($query, mixed $tags, Request $request)
+{
+    $tags ??= ['default'];
+    
+    $query->whereHas('tags', fn($subquery) => $subquery->whereIn('name', $tags));
 }
 ```
 

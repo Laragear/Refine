@@ -11,7 +11,6 @@ abstract class Refiner
     /**
      * Return the keys to use to refine the query.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return string[]
      */
     public function getKeys(Request $request): array
@@ -20,11 +19,19 @@ abstract class Refiner
     }
 
     /**
-     * Run before the refiner executes its matched methods.
+     * Return the keys as "foo_bar" that should always execute, even with "null" values.
      *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
+     * @return string[]
+     */
+    public function getObligatoryKeys(Request $request): array
+    {
+        return [
+            // ...
+        ];
+    }
+
+    /**
+     * Run before the refiner executes its matched methods.
      */
     public function runBefore(Builder|EloquentBuilder $query, Request $request): void
     {
@@ -33,10 +40,6 @@ abstract class Refiner
 
     /**
      * Run after the refiner has executed all its matched methods.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     public function runAfter(Builder|EloquentBuilder $query, Request $request): void
     {
@@ -46,7 +49,7 @@ abstract class Refiner
     /**
      * Return the validation rules
      *
-     * @return string[]|array[]
+     * @return array<string, string|string[]|\Illuminate\Contracts\Validation\Rule[]>
      */
     public function validationRules(): array
     {
@@ -58,7 +61,7 @@ abstract class Refiner
     /**
      * Return the validation messages.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function validationMessages(): array
     {
@@ -70,7 +73,7 @@ abstract class Refiner
     /**
      * Return the validation custom attributes.
      *
-     * @return array
+     * @return array<string, string>
      */
     public function validationCustomAttributes(): array
     {

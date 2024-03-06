@@ -41,17 +41,12 @@ class RefineQuery
 
     /**
      * Create a new refine query instance.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Laragear\Refine\Refiner  $refiner
      */
     public function __construct(
         protected Builder|EloquentBuilder $builder,
         protected Request $request,
         protected Refiner $refiner
-    )
-    {
+    ) {
         //
     }
 
@@ -59,7 +54,6 @@ class RefineQuery
      * Refine the database query using the HTTP Request query.
      *
      * @param  string[]|null  $keys
-     * @return void
      */
     public function match(array $keys = null): void
     {
@@ -72,19 +66,15 @@ class RefineQuery
         }
 
         // Take only the query keys that are going to be matched and run them.
-        foreach ($this->queryValuesFromRequest($request, $keys) as $method => $value) {
-            $this->refiner->{$method}($this->builder, $value, $request);
-        }
+        $this->executeRefinerMethodsFromRequest($request, $keys);
 
         $this->refiner->runAfter($this->builder, $request);
     }
 
     /**
      * Validate the refiner.
-     *
-     * @return void
      */
-    protected function validateRefiner()
+    protected function validateRefiner(): void
     {
         $validator = app(ValidationFactory::class)->make(
             $this->request->query(),
@@ -104,36 +94,35 @@ class RefineQuery
     /**
      * Retrieve all the query values from the keys to look for.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  string[]|null  $keys
-     * @return string[]
      */
-    protected function queryValuesFromRequest(Request $request, ?array $keys): array
+    protected function executeRefinerMethodsFromRequest(Request $request, ?array $keys): void
     {
-        return Collection::make($keys ?? $this->getKeysFromRefiner($this->request))
+        $placeholder = (object) [];
+
+        Collection::make($keys ?? $this->getKeysFromRefiner($this->request))
             // Transforms all items to $method => $key
             ->mapWithKeys(static function (string $key): array {
                 return [Str::camel($key) => $key];
             })
             // Remove all keys that are not present in the request query.
-            ->filter(static function (string $key) use ($request): bool {
-                return null !== $request->query($key);
-            })
+            // @phpstan-ignore-next-line
+            ->filter(static fn(string $key): bool => $placeholder !== $request->query($key, $placeholder))
+            // Add "obligatory" keys set by the refiner that will always run.
+            ->merge($this->getObligatoryKeysFromRefiner($request))
             // Keep all items which method is present in the refiner object.
             ->intersectByKeys(array_flip($this->getPublicMethodsFromRefiner()))
             // Remove all items which method are part of the abstract refiner object.
             ->diffKeys(array_flip($this->getRefinerClassMethods()))
             // Transforms all items into $method => $value
-            ->map(static function (string $key) use ($request): string|array|null {
-                return $request->query($key);
-            })
-            ->toArray();
+            ->each(function (string $key, string $method) use ($request): void {
+                $this->refiner->{$method}($this->builder, $request->query($key), $request);
+            });
     }
 
     /**
      * Retrieves the key to use from the Refiner instance.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return string[]
      */
     protected function getKeysFromRefiner(Request $request): array
@@ -154,12 +143,23 @@ class RefineQuery
 
     /**
      * Resolve the current request.
-     *
-     * @return \Illuminate\Http\Request
      */
     public function request(): Request
     {
         return app('request');
+    }
+
+    /**
+     * Return the obligatory keys from the refiner.
+     *
+     * @return \Illuminate\Support\Collection<string, string>
+     */
+    protected function getObligatoryKeysFromRefiner(Request $request): Collection
+    {
+        return Collection::make($this->refiner->getObligatoryKeys($request))
+            ->mapWithKeys(static function (string $key): array {
+                return [Str::camel($key) => $key];
+            });
     }
 
     /**
@@ -192,17 +192,14 @@ class RefineQuery
     /**
      * Create a new refine query instance.
      *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Laragear\Refine\Refiner|class-string|string  $refiner
-     * @param  array|null  $keys
-     * @return \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder
+     * @param  \Laragear\Refine\Refiner|class-string<\Laragear\Refine\Refiner>  $refiner
+     * @param  string[]|null  $keys
      */
     public static function refine(
         Builder|EloquentBuilder $builder,
         Refiner|string $refiner,
         array $keys = null
     ): Builder|EloquentBuilder {
-        // @
         $instance = new static($builder, app('request'), is_string($refiner) ? app($refiner) : $refiner);
 
         $instance->match($keys);
