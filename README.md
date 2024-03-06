@@ -35,8 +35,7 @@ Your support allows me to keep this package free, up-to-date and maintainable. A
 
 ## Requirements
 
-* PHP 8 or later.
-* Laravel 9, 10 or later.
+* Laravel 10 or later.
 
 ## Installation
 
@@ -259,6 +258,8 @@ You may also include validation logic into your Refiner by implementing the `Val
 This is great if you expect a key to always be required in the query, as the `validationRules()` is an excellent place to do it.
 
 ```php
+namespace App\Http\Refiners;
+
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use Laragear\Refine\Refiner;
 
@@ -317,6 +318,156 @@ public function all(Request $request)
     ])
 
     Post::query()->refineBy(PostFilter::class, ['author_id', 'order', 'order_by'])->paginate();
+}
+```
+
+## Model Refiner
+
+You may use the included `ModelRefiner` to quickly create a refiner for a model query, and automatically manage columns, relations, count, relation sum, trashed, and order.
+
+Simply call the `make:refiner` with the `--model` option.
+
+```shell
+php artisan make:refiner ArticleRefiner --model 
+```
+
+You will receive a refiner extending the base `ModelRefiner`. Here you should set the relations, columns, sums, and order the refiner should use to validate the URL query.
+
+```php
+namespace App\Http\Refiners;
+
+use Laragear\Refine\ModelRefiner;
+
+class ArticleRefiner extends ModelRefiner
+{
+    /**
+     * Return the columns that should only be included in the query.
+     *
+     * @return string[]
+     */
+    protected function getOnlyColumns(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the columns that should be removed from the query.
+     *
+     * @return string[]
+     */
+    protected function getExceptColumns(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that should exist for the query.
+     *
+     * @return string[]
+     */
+    protected function getHasRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that should be missing for the query.
+     *
+     * @return string[]
+     */
+    protected function getMissingRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that can be queried.
+     *
+     * @return string[]
+     */
+    protected function getWithRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that can be counted.
+     *
+     * @return string[]
+     */
+    protected function getCountRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations and the columns that should be sum.
+     *
+     * @return string[]
+     */
+    protected function getSumRelations(): array
+    {
+        // Separate the relation name using hyphen (`-`). For example, `published_posts-votes`.
+        return [];
+    }
+
+    /**
+     * Return the columns that can be used to sort the query.
+     *
+     * @return string[]
+     */
+    protected function getOrderByColumns(): array
+    {
+        return [];
+    }
+}
+```
+
+As with a normal refiner, you may also override the validation keys and/or the keys to check in the request, and even how each query key should be _refined_.
+
+```php
+namespace App\Http\Refiners;
+
+use Illuminate\Support\Arr;
+use Laragear\Refine\ModelRefiner;
+
+class ArticleRefiner extends ModelRefiner
+{
+    public function validationRules(): array
+    {
+        return Arr::only(parent::validationRules(), ['with', 'with.*', 'order', 'order_by']);
+    }
+
+    public function getKeys(Request $request): array
+    {
+        return Arr::only(parent::getKeys(), ['with', 'order', 'order_by']);
+    }
+    
+    public function query(Builder $query, string $search): void
+    {
+        $query->where('name', 'like', $this->normaliseQuery($search));
+    }
+    
+    // ...
+}
+```
+
+> [!TIP]
+> 
+> Even if you validate relations using `snake_case`, when building the query for relations, these will be automatically transformed into `camelCase`, even if these are separated by `dot.notation`.
+
+### Sum relations
+
+The `ModelRefiner` supports summing relations columns using the relation name and the column separated by a hyphen. You may want to set an array of relations and possible columns to sum by returning them in the `getSumRelations()` method.
+
+```php
+protected function getSumRelations(): array
+{
+    return [
+        'user_comments-claps',
+        'user_comments-down_votes',
+        'user_comments-up_votes',
+    ];
 }
 ```
 

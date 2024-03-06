@@ -6,7 +6,10 @@ use Illuminate\Console\GeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 
-#[AsCommand(name: 'make:refiner')]
+/**
+ * @internal
+ */
+#[AsCommand('make:refiner', 'Create a new custom Refiner class')]
 class MakeRefinerCommand extends GeneratorCommand
 {
     /**
@@ -14,7 +17,7 @@ class MakeRefinerCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $name = 'make:refiner';
+    protected $name = 'make:refiner {--model: Creates a refiner for an Eloquent Model}';
 
     /**
      * The console command description.
@@ -37,16 +40,15 @@ class MakeRefinerCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return $this->resolveStubPath('/stubs/refiner.stub');
+        return $this->hasOption('model')
+            ? $this->resolveStubPath('/stubs/model-refiner.stub')
+            : $this->resolveStubPath('/stubs/refiner.stub');
     }
 
     /**
      * Resolve the fully-qualified path to the stub.
-     *
-     * @param  string  $stub
-     * @return string
      */
-    protected function resolveStubPath($stub)
+    protected function resolveStubPath($stub): string
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/'))) ? $customPath : __DIR__.$stub;
     }
