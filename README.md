@@ -1,4 +1,4 @@
-# Query Filter
+# Refiner
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laragear/refine.svg)](https://packagist.org/packages/laragear/refine)
 [![Latest stable test run](https://github.com/Laragear/Refine/workflows/Tests/badge.svg)](https://github.com/Laragear/Refine/actions)
 [![Codecov coverage](https://codecov.io/gh/Laragear/Refine/branch/1.x/graph/badge.svg?token=lJMZg5mdVy)](https://codecov.io/gh/Laragear/Refine)
