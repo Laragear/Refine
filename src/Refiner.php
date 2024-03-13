@@ -47,7 +47,7 @@ abstract class Refiner
     }
 
     /**
-     * Return the validation rules
+     * Return the validation rules.
      *
      * @return array<string, string|string[]|\Illuminate\Contracts\Validation\Rule[]>
      */

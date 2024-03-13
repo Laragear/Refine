@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use ReflectionClass;
 use ReflectionMethod;
+
 use function app;
 use function array_flip;
 use function array_values;
@@ -21,6 +22,7 @@ use function is_string;
 
 /**
  * @internal
+ *
  * @phpstan-consistent-constructor
  */
 class RefineQuery
@@ -107,7 +109,7 @@ class RefineQuery
             })
             // Remove all keys that are not present in the request query.
             // @phpstan-ignore-next-line
-            ->filter(static fn(string $key): bool => $placeholder !== $request->query($key, $placeholder))
+            ->filter(static fn (string $key): bool => $placeholder !== $request->query($key, $placeholder))
             // Add "obligatory" keys set by the refiner that will always run.
             ->merge($this->getObligatoryKeysFromRefiner($request))
             // Keep all items which method is present in the refiner object.
@@ -171,14 +173,14 @@ class RefineQuery
     {
         $class = get_class($this->refiner);
 
-        if (!isset(static::$cachedMethods[$class])) {
+        if (! isset(static::$cachedMethods[$class])) {
             static::$cachedMethods[$class] = Collection::make((new ReflectionClass($class))->getMethods())
                 ->filter(static function (ReflectionMethod $method): bool {
                     return $method->isPublic()
-                        && !$method->isStatic()
-                        && !$method->isAbstract()
-                        && !$method->isDestructor()
-                        && !$method->isConstructor();
+                        && ! $method->isStatic()
+                        && ! $method->isAbstract()
+                        && ! $method->isDestructor()
+                        && ! $method->isConstructor();
                 })
                 ->map(static function (ReflectionMethod $method): string {
                     return $method->name;
