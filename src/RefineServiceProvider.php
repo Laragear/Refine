@@ -20,11 +20,11 @@ class RefineServiceProvider extends ServiceProvider
             return RefineQuery::refine($this, $refiner, $keys);
         };
 
-        if (!Builder::hasMacro('refineBy')) {
+        if (! Builder::hasMacro('refineBy')) {
             Builder::macro('refineBy', $callback);
         }
 
-        if (!EloquentBuilder::hasGlobalMacro('refineBy')) {
+        if (! EloquentBuilder::hasGlobalMacro('refineBy')) {
             EloquentBuilder::macro('refineBy', $callback);
         }
 

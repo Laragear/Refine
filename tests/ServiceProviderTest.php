@@ -5,7 +5,6 @@ namespace Tests;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\ServiceProvider;
 use Laragear\MetaTesting\InteractsWithServiceProvider;
 use Laragear\Refine\RefineServiceProvider;
