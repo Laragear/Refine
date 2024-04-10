@@ -25,16 +25,6 @@ class {{ class }} extends ModelRefiner
     }
 
     /**
-     * Return the columns that should be removed from the query.
-     *
-     * @return string[]
-     */
-    protected function getExceptColumns(): array
-    {
-        return [];
-    }
-
-    /**
      * Return the relations that should exist for the query.
      *
      * @return string[]
@@ -81,7 +71,9 @@ class {{ class }} extends ModelRefiner
      */
     protected function getSumRelations(): array
     {
-        // Separate the relation name using hyphen (`-`). For example, `published_posts-votes`.
+        // Separate the relation name using hyphen (`-`). For example, the string
+        // `published_posts-approved_votes` will be transformed into the code:
+        // `$query->withSum('PublishedPosts', 'approved_votes')`
         return [];
     }
 

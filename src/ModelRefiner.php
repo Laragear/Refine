@@ -2,11 +2,14 @@
 
 namespace Laragear\Refine;
 
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laragear\Refine\Contracts\ValidatesRefiner;
+use UnexpectedValueException;
+use function array_pad;
 use function explode;
 use function htmlspecialchars;
 use function in_array;
@@ -19,6 +22,15 @@ use const ENT_SUBSTITUTE;
 abstract class ModelRefiner extends Refiner implements ValidatesRefiner
 {
     /**
+     * If the query search should use full-text search.
+     *
+     * @var bool
+     *
+     * @see https://laravel.com/docs/11.x/queries#full-text-where-clauses
+     */
+    protected bool $fullTextSearch = false;
+
+    /**
      * Return the validation rules
      *
      * @return array<string, string|string[]|\Illuminate\Contracts\Validation\Rule[]>
@@ -27,23 +39,21 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     {
         return [
             'query' => 'sometimes|nullable|string',
-            'only' => 'sometimes|nullable|array|in:',
-            'only.*' => ['required', 'string', Rule::in($this->getOnlyColumns())],
-            'except' => 'sometimes|nullable|array',
-            'except.*' => ['required', 'string', Rule::in($this->getExceptColumns())],
+            'only' => 'sometimes|nullable|array',
+            'only.*' => ['required_with:only', 'string', Rule::in($this->getOnlyColumns())],
             'has' => 'sometimes|nullable|array',
             'has.*' => ['required_with:has', 'string', Rule::in($this->getHasRelations())],
-            'missing' => 'sometimes|nullable|array',
-            'missing.*' => ['required_with:has', 'string', Rule::in($this->getMissingRelations())],
+            'has_not' => 'sometimes|nullable|array',
+            'has_not.*' => ['required_with:missing', 'string', Rule::in($this->getHasNotRelations())],
             'with' => 'sometimes|nullable|array',
-            'with.*' => ['required', 'string', Rule::in($this->getWithRelations())],
+            'with.*' => ['required_with:with', 'string', Rule::in($this->getWithRelations())],
             'with_count' => 'sometimes|nullable|array',
-            'with_count.*' => ['required', 'string', Rule::in($this->getCountRelations())],
+            'with_count.*' => ['required_with:with_count', 'string', Rule::in($this->getCountRelations())],
             'with_sum' => 'sometimes|nullable|array',
-            'with_sum.*' => ['required_with:with_sum', 'string', Rule::in($this->getSumRelations())],
+            'with_sum.*' => ['required_with:with_sum', 'string', Rule::in($this->getWithSumRelations())],
             'trashed' => 'sometimes|nullable|boolean',
-            'order' => 'sometimes|in:asc,desc',
-            'order_by' => ['required_with:order', 'sometimes', Rule::in($this->getOrderByColumns())],
+            'order_by' => ['sometimes', 'nullable', Rule::in($this->getOrderByColumns())],
+            'order_by_desc' => ['sometimes', 'nullable', Rule::in($this->getOrderByColumns())],
             'limit' => 'sometimes|nullable|integer',
             'per_page' => 'sometimes|nullable|integer',
         ];
@@ -61,13 +71,14 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
             'only',
             'except',
             'has',
-            'missing',
+            'has_not',
             'with',
             'with_count',
             'with_sum',
             'trashed',
             'order',
             'order_by',
+            'order_by_desc',
             'limit',
             'per_page',
         ];
@@ -79,16 +90,6 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
      * @return string[]
      */
     protected function getOnlyColumns(): array
-    {
-        return [];
-    }
-
-    /**
-     * Return the columns that should be removed from the query.
-     *
-     * @return string[]
-     */
-    protected function getExceptColumns(): array
     {
         return [];
     }
@@ -108,7 +109,7 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
      *
      * @return string[]
      */
-    protected function getMissingRelations(): array
+    protected function getHasNotRelations(): array
     {
         return [];
     }
@@ -138,7 +139,7 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
      *
      * @return string[]
      */
-    protected function getSumRelations(): array
+    protected function getWithSumRelations(): array
     {
         // Separate the relation name using hyphen (`-`). For example, `published_posts-votes`.
         return [];
@@ -166,31 +167,66 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
 
     /**
      * Filter the query by a column containing a given text.
-     *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      */
-    public function query($query, string $search): void
+    public function query(EloquentBuilder $query, string $search): void
     {
         if ($columns = (array) $this->getQueryColumns()) {
-            $query->where(static function ($query) use ($search, $columns): void {
+            $query->where(function (EloquentBuilder $query) use ($search, $columns): void {
                 $query->whereKey($search);
 
-                foreach ($columns as $column) {
-                    $query->orWhere($column, 'ILIKE', Str::wrap(
-                        htmlspecialchars($search, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), '%')
-                    );
+                if ($this->fullTextSearch) {
+                    $query->orWhereFullText($columns, $search);
+                } else {
+                    foreach ($columns as $column) {
+                        $query->orWhere($column, 'ILIKE', Str::wrap(
+                            htmlspecialchars($search, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), '%')
+                        );
+                    }
                 }
             });
         }
     }
 
     /**
-     * Load the given relations to the query results.
+     * Select only some columns to return in the query results.
      *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @param  string[]  $columns
+     */
+    public function only(EloquentBuilder $query, array $columns): void
+    {
+        $query->select($columns);
+    }
+
+    /**
+     * Find records that contain at least one related model.
+     *
      * @param  string[]  $relations
      */
-    public function with($query, array $relations): void
+    public function has(EloquentBuilder $query, array $relations): void
+    {
+        foreach ($relations as $relation) {
+            $query->has($this->normalizeRelation($relation));
+        }
+    }
+
+    /**
+     * Find records that do not contain any related model.
+     *
+     * @param  string[]  $relations
+     */
+    public function hasNot(EloquentBuilder $query, array $relations): void
+    {
+        foreach ($relations as $relation) {
+            $query->doesntHave($this->normalizeRelation($relation));
+        }
+    }
+
+    /**
+     * Load the given relations to the query results.
+     *
+     * @param  string[]  $relations
+     */
+    public function with(EloquentBuilder $query, array $relations): void
     {
         foreach ($relations as $relation) {
             $query->with($this->normalizeRelation($relation));
@@ -200,10 +236,9 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     /**
      * Load the given count of relations to the query result.
      *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      * @param  string[]  $relations
      */
-    public function withCount($query, array $relations): void
+    public function withCount(EloquentBuilder $query, array $relations): void
     {
         foreach ($relations as $relation) {
             $query->withCount($this->normalizeRelation($relation));
@@ -213,13 +248,16 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     /**
      * Load the given count of relations to the query result.
      *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      * @param  string[]  $relations
      */
-    public function withSum($query, array $relations): void
+    public function withSum(EloquentBuilder $query, array $relations): void
     {
         foreach ($relations as $relation) {
-            [$relation, $column] = explode('-', $relation);
+            [$relation, $column] = array_pad(explode('-', $relation), 2, null);
+
+            if (!$relation || !$column) {
+                throw new UnexpectedValueException('Cannot find the relation or column to sum');
+            }
 
             $query->withSum($this->normalizeRelation($relation), $column);
         }
@@ -235,10 +273,8 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
 
     /**
      * Load trashed models in the query.
-     *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      */
-    public function trashed($query, string $trashed): void
+    public function trashed(EloquentBuilder $query, string $trashed): void
     {
         if (in_array(Str::lower($trashed), ['1', 'true', 'on']) && $query->hasNamedScope(SoftDeletingScope::class)) {
             $query->withTrashed();
@@ -248,36 +284,37 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     /**
      * Sort the query using the given column and order.
      *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * @param  "asc"|"desc"  $direction
      */
-    public function order($query, string $order, Request $request): void
+    public function orderBy(EloquentBuilder $query, string $column, Request $request, string $direction = 'asc'): void
     {
-        if ($column = $request->get('order_by')) {
-            $query->orderBy($column, $order);
-        }
+        // Do not add another order if one is already defined.
+        ! $query->getQuery()->orders && $query->orderBy($column, $direction);
+    }
+
+    /**
+     * Sort the query using the given column and order.
+     */
+    public function orderByDesc(EloquentBuilder $query, string $column, Request $request): void
+    {
+        $this->orderBy($query, $column, $request, 'desc');
     }
 
     /**
      * Limit the query results by the given amount.
-     *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
      */
-    public function limit($query, int $limit): void
+    public function limit(EloquentBuilder $query, int $limit): void
     {
         // This will the limit between zero and the default model "perPage" configuration (15 by default).
         $query->limit(max(0, min($limit, $query->getModel()->getPerPage())));
     }
 
     /**
-     * Limit the query results by the given amount.
-     *
-     * Alias for `limit`.
-     *
-     * @param  \Illuminate\Contracts\Database\Eloquent\Builder  $query
+     * Limit the query results by the given amount. Alias for `limit`.
      *
      * @internal
      */
-    public function perPage($query, int $limit): void
+    public function perPage(EloquentBuilder $query, int $limit): void
     {
         $this->limit($query, $limit);
     }

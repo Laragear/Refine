@@ -168,7 +168,7 @@ class PostRefiner extends Refiner
 
 ### Only some keys
 
-On rare occasions, you may have a method you don't want to be executed as part of the refinement procedure. In that case, you may instruct which URL parameters keys should be used to match their respective methods with the `getKeys()` method.
+On rare occasions, you may have a method you don't want to be executed as part of the refinement procedure, especially if your Refiner is extending another Refiner. In that case, you may instruct which URL parameters keys should be used to match their respective methods with the `getKeys()` method.
 
 ```php
 use Illuminate\Http\Request;
@@ -212,12 +212,12 @@ public function getObligatoryKeys(): array
 }
 ```
 
-Then, our method should be able to receive `null` for when the URL parameter doesn't exist.
+Then, the method should be able to receive a `null` value when the URL parameter is not set.
 
 ```php
 public function orderBy($query, ?string $value, Request $request)
 {
-    // If the value was not set, use the publishig timestamp as the column to sort.
+    // If the value was not set, use the publishing timestamp as the column to sort.
     $value ??= 'published_at'
     
     $query->orderBy($value, $request->query('order') ?? 'asc');
@@ -317,13 +317,26 @@ public function all(Request $request)
         // ...
     ])
 
-    Post::query()->refineBy(PostFilter::class, ['author_id', 'order', 'order_by'])->paginate();
+    return Post::query()->refineBy(PostFilter::class, ['author_id', 'order_by'])->paginate();
 }
 ```
 
 ## Model Refiner
 
-You may use the included `ModelRefiner` to quickly create a refiner for a model query, and automatically manage columns, relations, count, relation sum, trashed, and order.
+You may use the included `ModelRefiner` to quickly create a refiner for a database query over a model. The Model Refiner simplifies automatically the following URL parameters:
+
+- `query` to search by both primary key _or_ text contained in predetermined columns. 
+- `only[]` to only retrieve certain of columns.
+- `has[]` to retrieve items that have at least one related model.
+- `has_not[]` to retrieve items that doesn't have a related model.
+- `with[]` to retrieve items including a relation or nested relation.
+- `with_count[]` to include the count of the given relations.
+- `with_sum[]` to include the count of the given relation column.
+- `trashed` to include trashed items in the query.
+- `order_by|order_by_desc` to determine which column to use for ordering.
+- `limit|per_page` to limit the number of items retrieved.
+
+### Creating a Model Refiner
 
 Simply call the `make:refiner` with the `--model` option.
 
@@ -331,7 +344,7 @@ Simply call the `make:refiner` with the `--model` option.
 php artisan make:refiner ArticleRefiner --model 
 ```
 
-You will receive a refiner extending the base `ModelRefiner`. Here you should set the relations, columns, sums, and order the refiner should use to validate the URL query.
+You will receive a refiner extending the base `ModelRefiner`. Here you should set the relations, columns, sums, and order the refiner should use to validate the URL parameters values. This way you can have control on which columns or relations are permitted to be set in the query.
 
 ```php
 namespace App\Http\Refiners;
@@ -351,16 +364,6 @@ class ArticleRefiner extends ModelRefiner
     }
 
     /**
-     * Return the columns that should be removed from the query.
-     *
-     * @return string[]
-     */
-    protected function getExceptColumns(): array
-    {
-        return [];
-    }
-
-    /**
      * Return the relations that should exist for the query.
      *
      * @return string[]
@@ -375,7 +378,7 @@ class ArticleRefiner extends ModelRefiner
      *
      * @return string[]
      */
-    protected function getMissingRelations(): array
+    protected function getHasNotRelations(): array
     {
         return [];
     }
@@ -405,7 +408,7 @@ class ArticleRefiner extends ModelRefiner
      *
      * @return string[]
      */
-    protected function getSumRelations(): array
+    protected function getWithSumRelations(): array
     {
         // Separate the relation name using hyphen (`-`). For example, `published_posts-votes`.
         return [];
@@ -435,12 +438,12 @@ class ArticleRefiner extends ModelRefiner
 {
     public function validationRules(): array
     {
-        return Arr::only(parent::validationRules(), ['with', 'with.*', 'order', 'order_by']);
+        return Arr::only(parent::validationRules(), ['with', 'with.*', 'order_by']);
     }
 
     public function getKeys(Request $request): array
     {
-        return Arr::only(parent::getKeys(), ['with', 'order', 'order_by']);
+        return Arr::only(parent::getKeys(), ['with', 'order_by']);
     }
     
     public function query(Builder $query, string $search): void
@@ -454,7 +457,27 @@ class ArticleRefiner extends ModelRefiner
 
 > [!TIP]
 > 
-> Even if you validate relations using `snake_case`, when building the query for relations, these will be automatically transformed into `camelCase`, even if these are separated by `dot.notation`.
+> Even if you validate relations using `snake_case`, when building the query for relations, these will be automatically transformed into `camelCase`, even if these are separated by `dot.notation`. No need to change case.
+
+### Full text search
+
+By default, when receiving a string to search as "query", the Model Refiner will use an `ILIKE` operator to search inside one or many columns. This approach will work on all SQL engines.
+
+Alternatively, you may use [PostgreSQL or MySQL full-text search capabilities](https://laravel.com/docs/11.x/queries#full-text-where-clauses) by setting `$fullTextSearch` as `true` in your Model Refiner.
+
+```php
+namespace App\Http\Refiners;
+
+use Illuminate\Support\Arr;
+use Laragear\Refine\ModelRefiner;
+
+class ArticleRefiner extends ModelRefiner
+{
+    protected bool $fullTextSearch = true;
+
+    // ...
+}
+```
 
 ### Sum relations
 
@@ -471,6 +494,8 @@ protected function getSumRelations(): array
 }
 ```
 
+The above will make calls to the `userComments()` relation of the queried model.
+
 ## Laravel Octane compatibility
 
 - There are no singletons using a stale application instance.
@@ -479,9 +504,9 @@ protected function getSumRelations(): array
 - A static property being written is the cache of Refiner methods which grows by every unique Refiner that runs.
 - A static property being written is the cache of Abstract Refiner methods which is only written once.
 
-There should be no problems using this package with Laravel Octane.
+The cached Refiner methods shouldn't grow uncontrollably, unless you have dozens of Refiner classes being called multiple times. In any case, you can always flush the cached refiner methods using the `RefineQuery::flushCachedRefinerMethods()`.
 
-If you can always flush the cached refiner methods using the `RefineQuery::flushCachedRefinerMethods()`.
+There should be no problems using this package with Laravel Octane.
 
 ## Security
 

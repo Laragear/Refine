@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Closure;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use Laragear\Refine\RefineQuery;
@@ -34,10 +33,10 @@ class RefinerTest extends TestCase
     {
         return [
             [static function () {
-                return MockModel::query();
+                return Fixtures\MockModel::query();
             }],
             [static function () {
-                return MockModel::query()->getQuery();
+                return Fixtures\MockModel::query()->getQuery();
             }],
         ];
     }
@@ -279,11 +278,6 @@ class RefinerTest extends TestCase
 
         static::assertNull(MockRefinerWithObligatoryKeys::$value);
     }
-}
-
-class MockModel extends Model
-{
-    //
 }
 
 class MockRefiner extends Refiner

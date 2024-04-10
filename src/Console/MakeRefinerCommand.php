@@ -13,13 +13,6 @@ use Symfony\Component\Console\Input\InputOption;
 class MakeRefinerCommand extends GeneratorCommand
 {
     /**
-     * The console command name.
-     *
-     * @var string
-     */
-    protected $name = 'make:refiner {--model: Creates a refiner for an Eloquent Model}';
-
-    /**
      * The console command description.
      *
      * @var string
@@ -40,9 +33,7 @@ class MakeRefinerCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return $this->hasOption('model')
-            ? $this->resolveStubPath('/stubs/model-refiner.stub')
-            : $this->resolveStubPath('/stubs/refiner.stub');
+        return $this->resolveStubPath($this->option('model') ? '/stubs/model-refiner.stub' : '/stubs/refiner.stub');
     }
 
     /**
@@ -72,6 +63,7 @@ class MakeRefinerCommand extends GeneratorCommand
     protected function getOptions()
     {
         return [
+            ['model', 'm', InputOption::VALUE_NONE, 'Creates a refiner for an Eloquent Model'],
             ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the cast already exists'],
         ];
     }
