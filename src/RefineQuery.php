@@ -12,7 +12,6 @@ use Illuminate\Support\Str;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use ReflectionMethod;
 use ReflectionObject;
-
 use function app;
 use function array_flip;
 use function array_values;
@@ -111,8 +110,8 @@ class RefineQuery
                 return [Str::camel($key) => $key];
             })
             // Remove all keys that are not present in the request query.
-            // @phpstan-ignore-next-line
             ->filter(function (string $key): bool {
+                // @phpstan-ignore-next-line
                 return ($placeholder = (object) []) !== $this->request->query($key, $placeholder);
             })
             // Add "obligatory" keys set by the refiner that will always run.
