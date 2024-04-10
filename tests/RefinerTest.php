@@ -33,8 +33,12 @@ class RefinerTest extends TestCase
     public static function provideBuilders(): array
     {
         return [
-            [static function () { return MockModel::query(); }],
-            [static function () { return MockModel::query()->getQuery(); }]
+            [static function () {
+                return MockModel::query();
+            }],
+            [static function () {
+                return MockModel::query()->getQuery();
+            }],
         ];
     }
 
@@ -47,6 +51,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -63,6 +68,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -79,6 +85,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -99,6 +106,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -119,6 +127,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -126,7 +135,7 @@ class RefinerTest extends TestCase
     {
         $this->mockRequest(['__construct' => 1, 'protected' => 2, 'static' => 3, '__destruct' => 4]);
 
-        $mock = $this->partialMock(MockVariedMethodsRefiner::class, function (MockInterface  $mock): void {
+        $mock = $this->partialMock(MockVariedMethodsRefiner::class, function (MockInterface $mock): void {
             $mock->shouldAllowMockingProtectedMethods();
         });
 
@@ -140,6 +149,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -158,6 +168,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -178,6 +189,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -187,7 +199,7 @@ class RefinerTest extends TestCase
 
         $builder = $getQuery();
 
-        $this->partialMock(MockValidatesRefiner::class, function (MockInterface $mock) use ($builder): void {
+        $this->partialMock(MockValidatesRefiner::class, function (MockInterface $mock): void {
             $mock->shouldReceive('validationRules')->once();
             $mock->shouldReceive('validationMessages')->once();
             $mock->shouldReceive('validationCustomAttributes')->once();
@@ -198,6 +210,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -207,7 +220,7 @@ class RefinerTest extends TestCase
 
         $builder = $getQuery();
 
-        $this->partialMock(MockRefiner::class, function (MockInterface $mock) use ($builder): void {
+        $this->partialMock(MockRefiner::class, function (MockInterface $mock): void {
             $mock->shouldNotReceive('validationRules');
             $mock->shouldNotReceive('validationMessages');
             $mock->shouldNotReceive('validationCustomAttributes');
@@ -218,6 +231,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -234,6 +248,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -250,6 +265,7 @@ class RefinerTest extends TestCase
 
     /**
      * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     *
      * @dataProvider provideBuilders
      */
     #[DataProvider('provideBuilders')]
@@ -274,17 +290,14 @@ class MockRefiner extends Refiner
 {
     public function foo()
     {
-
     }
 
     public function bar()
     {
-
     }
 
     public function quz()
     {
-
     }
 }
 
@@ -310,22 +323,18 @@ class MockVariedMethodsRefiner extends Refiner
 {
     public function __construct()
     {
-
     }
 
     protected function protected()
     {
-
     }
 
     public static function static()
     {
-
     }
 
     public function __destruct()
     {
-
     }
 }
 
@@ -346,5 +355,4 @@ class MockRefinerWithObligatoryKeys extends MockRefiner
 
 class MockValidatesRefiner extends Refiner implements ValidatesRefiner
 {
-
 }

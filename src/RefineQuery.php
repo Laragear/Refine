@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use ReflectionMethod;
 use ReflectionObject;
+
 use function app;
 use function array_flip;
 use function array_values;
@@ -21,6 +22,7 @@ use function is_string;
 
 /**
  * @internal
+ *
  * @phpstan-consistent-constructor
  */
 class RefineQuery
@@ -179,14 +181,14 @@ class RefineQuery
     {
         $class = get_class($this->refiner);
 
-        if (!isset(static::$cachedMethods[$class])) {
+        if (! isset(static::$cachedMethods[$class])) {
             static::$cachedMethods[$class] = Collection::make(
                 (new ReflectionObject($this->refiner))->getMethods(ReflectionMethod::IS_PUBLIC)
             )
                 ->filter(static function (ReflectionMethod $method): bool {
                     return $method->isUserDefined()
-                        && !$method->isStatic()
-                        && !$method->isAbstract();
+                        && ! $method->isStatic()
+                        && ! $method->isAbstract();
                 })
                 ->map(static function (ReflectionMethod $method): string {
                     return $method->name;

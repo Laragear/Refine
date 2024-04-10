@@ -20,6 +20,7 @@ abstract class Refiner
 
     /**
      * Return the keys that should be always run its mapped methods.
+     *
      * @return string[]
      */
     public function getObligatoryKeys(Request $request): array
@@ -52,7 +53,7 @@ abstract class Refiner
     }
 
     /**
-     * Return the validation rules
+     * Return the validation rules.
      *
      * @return string[]|array[]
      */
