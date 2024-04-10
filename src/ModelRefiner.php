@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use UnexpectedValueException;
+
 use function array_pad;
 use function explode;
 use function htmlspecialchars;
@@ -16,6 +17,7 @@ use function in_array;
 use function join;
 use function max;
 use function min;
+
 use const ENT_QUOTES;
 use const ENT_SUBSTITUTE;
 
@@ -31,7 +33,7 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     protected bool $fullTextSearch = false;
 
     /**
-     * Return the validation rules
+     * Return the validation rules.
      *
      * @return array<string, string|string[]|\Illuminate\Contracts\Validation\Rule[]>
      */
@@ -255,7 +257,7 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
         foreach ($relations as $relation) {
             [$relation, $column] = array_pad(explode('-', $relation), 2, null);
 
-            if (!$relation || !$column) {
+            if (! $relation || ! $column) {
                 throw new UnexpectedValueException('Cannot find the relation or column to sum');
             }
 

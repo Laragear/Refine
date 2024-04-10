@@ -7,6 +7,7 @@ use Laragear\Refine\ModelRefiner;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\Fixtures\MockModel;
 use UnexpectedValueException;
+
 use function array_map;
 use function join;
 
@@ -14,7 +15,7 @@ class ModelRefinerTest extends TestCase
 {
     protected function stringifyValidationRule(string|array $rule): string
     {
-        return join('|', array_map(fn($rule): string => (string) $rule, (array) $rule));
+        return join('|', array_map(fn ($rule): string => (string) $rule, (array) $rule));
     }
 
     #[Test]
@@ -104,7 +105,6 @@ class ModelRefinerTest extends TestCase
         $mock->shouldHaveReceived('only')->with($builder, ['foo'], $this->app->make('request'))->once();
     }
 
-
     #[Test]
     public function has_returns_items_with_relation(): void
     {
@@ -171,7 +171,8 @@ class ModelRefinerTest extends TestCase
         $this->expectException(UnexpectedValueException::class);
         $this->expectExceptionMessage('Cannot find the relation or column to sum');
 
-        $builder->refineBy(new class extends ModelRefiner {
+        $builder->refineBy(new class extends ModelRefiner
+        {
             protected function getWithSumRelations(): array
             {
                 return ['invalid'];
@@ -266,9 +267,7 @@ class ModelRefinerTest extends TestCase
 
 class MockModelRefiner extends ModelRefiner
 {
-
 }
-
 
 class MockModelRefinerWithColumns extends ModelRefiner
 {
