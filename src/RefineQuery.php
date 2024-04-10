@@ -12,7 +12,6 @@ use Illuminate\Support\Str;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use ReflectionMethod;
 use ReflectionObject;
-
 use function app;
 use function array_flip;
 use function array_values;
@@ -160,16 +159,6 @@ class RefineQuery
     protected function getRefinerClassMethods(): array
     {
         return static::$uncallableBaseRefinerMethods ??= get_class_methods(Refiner::class);
-    }
-
-    /**
-     * Resolve the current request.
-     *
-     * @return \Illuminate\Http\Request
-     */
-    public function request(): Request
-    {
-        return app('request');
     }
 
     /**
