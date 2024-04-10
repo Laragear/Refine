@@ -2,8 +2,8 @@
 
 namespace Laragear\Refine;
 
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Http\Request;
 
 abstract class Refiner
@@ -30,10 +30,6 @@ abstract class Refiner
 
     /**
      * Run before the refiner executes its matched methods.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     public function runBefore(Builder|EloquentBuilder $query, Request $request): void
     {
@@ -42,10 +38,6 @@ abstract class Refiner
 
     /**
      * Run after the refiner has executed all its matched methods.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     public function runAfter(Builder|EloquentBuilder $query, Request $request): void
     {

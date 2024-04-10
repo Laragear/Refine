@@ -2,6 +2,8 @@
 
 namespace Laragear\Refine;
 
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilderContract;
+use Illuminate\Contracts\Database\Query\Builder as BuilderContract;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\ServiceProvider;
@@ -15,8 +17,8 @@ class RefineServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $callback = function (object|string $refiner, array $keys = null): Builder|EloquentBuilder {
-            /** @var \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder $this */
+        $callback = function (object|string $refiner, array $keys = null): BuilderContract|EloquentBuilderContract {
+            /** @var \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Contracts\Database\Eloquent\Builder $this */
             return RefineQuery::refine($this, $refiner, $keys);
         };
 

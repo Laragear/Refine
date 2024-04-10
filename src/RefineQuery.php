@@ -2,9 +2,9 @@
 
 namespace Laragear\Refine;
 
+use Illuminate\Contracts\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Contracts\Database\Query\Builder;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Precognition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -74,7 +74,7 @@ class RefineQuery
     /**
      * Validate the refiner.
      */
-    protected function validateRefiner()
+    protected function validateRefiner(): void
     {
         $validator = app(ValidationFactory::class)->make(
             $this->request->query(),
