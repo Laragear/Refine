@@ -30,10 +30,6 @@ abstract class Refiner
 
     /**
      * Run before the refiner executes its matched methods.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     public function runBefore(Builder|EloquentBuilder $query, Request $request): void
     {
