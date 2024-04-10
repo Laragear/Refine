@@ -6,12 +6,25 @@ use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Laragear\Refine\Contracts\ValidatesRefiner;
+use Laragear\Refine\RefineQuery;
 use Laragear\Refine\Refiner;
 use Mockery\MockInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class RefinerTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        $this->afterApplicationCreated(function (): void {
+            MockRefinerWithObligatoryKeys::$value = 'uninitialized';
+        });
+
+        $this->afterApplicationCreated(RefineQuery::flushCachedRefinerMethods(...));
+        $this->beforeApplicationDestroyed(RefineQuery::flushCachedRefinerMethods(...));
+
+        parent::setUp();
+    }
+
     protected function mockRequest(array $data): void
     {
         $this->instance('request', new Request($data));
@@ -202,6 +215,54 @@ class RefinerTest extends TestCase
 
         $builder->refineBy(MockRefiner::class, ['bar']);
     }
+
+    /**
+     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
+     */
+    #[DataProvider('provideBuilders')]
+    public function test_runs_obligatory_key_without_value(Closure $getQuery): void
+    {
+        $this->mockRequest(['foo' => 1, 'bar' => 2]);
+
+        $builder = $getQuery();
+
+        $builder->refineBy(MockRefinerWithObligatoryKeys::class);
+
+        static::assertNull(MockRefinerWithObligatoryKeys::$value);
+    }
+
+    /**
+     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
+     */
+    #[DataProvider('provideBuilders')]
+    public function test_runs_obligatory_key_with_value(Closure $getQuery): void
+    {
+        $this->mockRequest(['foo' => 1, 'bar' => 2, 'qux' => 'value']);
+
+        $builder = $getQuery();
+
+        $builder->refineBy(MockRefinerWithObligatoryKeys::class);
+
+        static::assertSame('value', MockRefinerWithObligatoryKeys::$value);
+    }
+
+    /**
+     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
+     * @dataProvider provideBuilders
+     */
+    #[DataProvider('provideBuilders')]
+    public function test_runs_obligatory_key_without_overriding(Closure $getQuery): void
+    {
+        $this->mockRequest(['foo' => 1, 'bar' => 2]);
+
+        $builder = $getQuery();
+
+        $builder->refineBy(MockRefinerWithObligatoryKeys::class, ['bar']);
+
+        static::assertNull(MockRefinerWithObligatoryKeys::$value);
+    }
 }
 
 class MockModel extends Model
@@ -265,6 +326,21 @@ class MockVariedMethodsRefiner extends Refiner
     public function __destruct()
     {
 
+    }
+}
+
+class MockRefinerWithObligatoryKeys extends MockRefiner
+{
+    public static $value;
+
+    public function getObligatoryKeys(Request $request): array
+    {
+        return ['qux'];
+    }
+
+    public function qux($query, $value): void
+    {
+        static::$value = $value;
     }
 }
 

@@ -48,7 +48,7 @@ composer require laragear/refine
 
 ## Usage
 
-This package solves the problem of refining a Databse Query using the HTTP Request by moving that logic out of the controller.
+This package solves the problem of refining a database query using the URL parameters by moving that logic out of the controller.
 
 For example, imagine you want to show all the Posts made by a given Author ID. Normally, you would check that on the controller and modify the query inside.
 
@@ -61,16 +61,20 @@ public function all(Request $request)
     $request->validate([
         'author_id' => 'sometimes|integer'
     ]);
-
-    return Post::when($request->has('author_id'), function ($query) {
+    
+    $query = Post::query()->limit(10);
+    
+    if ($request->has('author_id')) {
         $query->where('author_id', $request->get('author_id'));
-    });
+    }
+
+    return $query->get();
 }
 ```
 
-While this is inoffensive, it will add up as more refinements are needed: published at a given time, with a given set of tags, ordering, etc. Eventually it will clutter your controller.
+While this looks inoffensive for a couple of URL parameters, it will add up as more refinements are needed: published at a given time, with a given set of tags, ordering by a given column, etc. Eventually it will clutter your controller action.
 
-Instead, Laragear Refine moves that logic to its own "Refiner" object.
+Instead, Laragear Refine moves that logic to its own "Refiner" object, which is handled by only issuing the refiner class name to the `refineBy()` method of the query builder.
 
 ```php
 use App\Models\Post;
@@ -83,7 +87,7 @@ public function all(Request $request)
 }
 ```
 
-The magic is simple: the refiner methods will be executed as long the key of the same name is present in the Request. Keys are automatically normalized to `camelCase` so these match the method, so `author_id` will become `authorId()`.
+The magic is simple: each refiner method will be executed as long the corresponding URL parameter key is present in the incoming request. Keys are automatically normalized to `camelCase` to match the method, so the `author_id` key will execute `authorId()` with its value.
 
 ```http request
 GET https://myapp.com/posts?author_id=20
@@ -101,15 +105,15 @@ class PostRefiner
 }
 ```
 
-## Creating a Filter
+## Creating a Refiner
 
-Call the `make:refiner` with the name of the Refiner.
+Call the `make:refiner` with the name of the Refiner you want to create.
 
 ```shell
 php artisan make:refiner PostRefiner
 ```
 
-You will receive the filter in the `app\Http\Refiners` folder:
+You will receive the refiner in the `app\Http\Refiners` directory.
 
 ```php
 namespace App\Http\Refiners;
@@ -132,9 +136,17 @@ As you can see, apart from the constructor, the class is empty. The next step is
 
 ### Defining methods
 
-Methods will be executed as long the Request key of the same name is present. Keys are normalized to `camelCase` to match the corresponding method.
+You may define the methods you want to be executed when a URL parameter key is present by simple creating these as public, using their corresponding `camelCase` key. 
 
-All methods you set in the Refiner class receive the Query Builder instance, the value from the request, and the Request instance itself. Inside each method, you're free to modify the Query Builder as you see fit, or even call authorization gates or check the user permissions.
+```php
+// For `author_id=value`
+public function authorId($query, mixed $value, Request $request)
+{
+    // ...
+}
+```
+
+All methods you set in the Refiner class receive the Query Builder instance, the value from the request, and the `Illuminate\Http\Request` instance itself. Inside each method, you're free to modify the Query Builder as you see fit, or even call authorization gates or check the user permissions.
 
 ```php
 namespace App\Http\Refiners;
@@ -157,7 +169,7 @@ class PostRefiner extends Refiner
 
 ### Only some keys
 
-By default, the Refiner will check all keys of the request query. You may want to limit which of these keys respective methods will be executed if present. To do that, use the `getKeys()` method, and return that set of keys.
+On rare occasions, you may have a method you don't want to be executed as part of the refinement procedure. In that case, you may instruct which URL parameters keys should be used to match their respective methods with the `getKeys()` method.
 
 ```php
 use Illuminate\Http\Request;
@@ -172,7 +184,7 @@ public function getKeys(Request $request): array
 }
 ```
 
-Alternatively, if you're using a `FormRequest`, you can just return the keys of the validated data.
+Alternatively, if you're using a `FormRequest`, you can always return the keys of the validated data.
 
 ```php
 use Illuminate\Http\Request;
@@ -185,6 +197,31 @@ public function getKeys(Request $request): array
     }
     
     return array_keys($request->keys());
+}
+```
+
+### Obligatory keys
+
+Sometimes you will want to run a method even if the key is not set in the URL parameters. For that, use the `getObligatoryKeys()` method to return the keys (and methods) that should always run.
+
+For example, if we want to run the `orderBy()` method regardless if there is the `order_by` URL parameter, we only need to return that key.
+
+```php
+public function getObligatoryKeys(): array
+{
+    return ['order_by'];
+}
+```
+
+Then, our method should be able to receive `null` for when the URL parameter doesn't exist.
+
+```php
+public function orderBy($query, ?string $value, Request $request)
+{
+    // If the value was not set, use the publishig timestamp as the column to sort.
+    $value ??= 'published_at'
+    
+    $query->orderBy($value, $request->query('order') ?? 'asc');
 }
 ```
 
@@ -217,9 +254,9 @@ class PostRefiner extends Refiner
 
 ### Validation
 
-You may also include validation logic into your Refiner by implementing the `ValidateRefiner` interface. From there, you should set your validation rules, and optionally your messages and custom attributes.
+You may also include validation logic into your Refiner by implementing the `ValidateRefiner` interface. From there, you should set your validation rules, and optionally your messages and custom attributes if you need to.
 
-Validation rules will run verbatim over the Request Query (not the input), so if you expect a key to always be required in the query, the `validationRules()` is an excellent place to do it.
+This is great if you expect a key to always be required in the query, as the `validationRules()` is an excellent place to do it.
 
 ```php
 use Laragear\Refine\Contracts\ValidatesRefiner;
@@ -236,6 +273,10 @@ class PostRefiner extends Refiner implements ValidatesRefiner
 }
 ```
 
+> [!NOTE]
+> 
+> Validation rules will run verbatim over the Request Query, not the request input.
+
 ## Applying a Refiner
 
 In your Builder instance, simply call `refineBy()` with the name of the Refiner class (or its alias if you registered it on the application container) to apply to the query.
@@ -247,12 +288,12 @@ use App\Http\Refiners\PostRefiner;
 Post::refineBy(PostRefiner::class)->paginate();
 ```
 
-The `refineBy()` is a macro registered to the Eloquent Builder and the base Query Builder, and you can use it even after your own refinements.
+The `refineBy()` is a macro registered to the Eloquent Builder and the base Query Builder, and you can use it even after your own custom refinements.
 
 ```php
 use App\Http\Requests\PostRequest;
-use Illuminate\Support\Facades\DB;
 use App\Http\Refiners\PostRefiner;
+use Illuminate\Support\Facades\DB;
 
 public function rawPosts(PostRequest $request)
 {
@@ -266,7 +307,7 @@ public function rawPosts(PostRequest $request)
 
 ### Custom keys
 
-You can override the keys to look for on the Request by issuing the keys as second argument.
+You can override the keys to look for on the Request at runtime by issuing the keys as second argument. These will replace the [custom keys](#only-some-keys) you have set in the class.
 
 ```php
 public function all(Request $request)
@@ -275,7 +316,7 @@ public function all(Request $request)
         // ...
     ])
 
-    Post::query()->refineBy(PostFilter::class, ['author_id'])->paginate();
+    Post::query()->refineBy(PostFilter::class, ['author_id', 'order', 'order_by'])->paginate();
 }
 ```
 
@@ -288,6 +329,8 @@ public function all(Request $request)
 - A static property being written is the cache of Abstract Refiner methods which is only written once.
 
 There should be no problems using this package with Laravel Octane.
+
+If you can always flush the cached refiner methods using the `RefineQuery::flushCachedRefinerMethods()`.
 
 ## Security
 

@@ -11,12 +11,20 @@ abstract class Refiner
     /**
      * Return the keys to use to refine the query.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return string[]
      */
     public function getKeys(Request $request): array
     {
         return array_keys($request->query());
+    }
+
+    /**
+     * Return the keys that should be always run its mapped methods.
+     * @return string[]
+     */
+    public function getObligatoryKeys(Request $request): array
+    {
+        return [];
     }
 
     /**
