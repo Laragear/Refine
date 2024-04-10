@@ -2,6 +2,7 @@
 
 namespace {{ namespace }};
 
+use Laragear\Refine\Contracts\ValidatesRefiner;
 use Laragear\Refine\Refiner;
 
 class {{ class }} extends Refiner

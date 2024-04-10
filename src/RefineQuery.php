@@ -43,10 +43,6 @@ class RefineQuery
 
     /**
      * Create a new refine query instance.
-     *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Laragear\Refine\Refiner  $refiner
      */
     public function __construct(
         protected Builder|EloquentBuilder $builder,
@@ -60,7 +56,6 @@ class RefineQuery
      * Refine the database query using the HTTP Request query.
      *
      * @param  string[]|null  $keys
-     * @return void
      */
     public function match(array $keys = null): void
     {
@@ -78,8 +73,6 @@ class RefineQuery
 
     /**
      * Validate the refiner.
-     *
-     * @return void
      */
     protected function validateRefiner()
     {
@@ -130,7 +123,6 @@ class RefineQuery
     /**
      * Retrieves the key to use from the Refiner instance.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return string[]
      */
     protected function getKeysFromRefiner(Request $request): array
@@ -160,16 +152,6 @@ class RefineQuery
     protected function getRefinerClassMethods(): array
     {
         return static::$uncallableBaseRefinerMethods ??= get_class_methods(Refiner::class);
-    }
-
-    /**
-     * Resolve the current request.
-     *
-     * @return \Illuminate\Http\Request
-     */
-    public function request(): Request
-    {
-        return app('request');
     }
 
     /**
@@ -210,10 +192,8 @@ class RefineQuery
     /**
      * Create a new refine query instance.
      *
-     * @param  \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $builder
      * @param  \Laragear\Refine\Refiner|class-string|string  $refiner
-     * @param  array|null  $keys
-     * @return \Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder
+     * @param  string[]|null  $keys
      */
     public static function refine(
         Builder|EloquentBuilder $builder,

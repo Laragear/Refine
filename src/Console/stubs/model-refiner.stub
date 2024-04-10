@@ -1,0 +1,89 @@
+<?php
+
+namespace {{ namespace }};
+
+use Laragear\Refine\ModelRefiner;
+
+class {{ class }} extends ModelRefiner
+{
+    /**
+     * Create a new model refiner instance.
+     */
+    public function __construct()
+    {
+        //
+    }
+
+    /**
+     * Return the columns that should only be included in the query.
+     *
+     * @return string[]
+     */
+    protected function getOnlyColumns(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that should exist for the query.
+     *
+     * @return string[]
+     */
+    protected function getHasRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that should be missing for the query.
+     *
+     * @return string[]
+     */
+    protected function getMissingRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that can be queried.
+     *
+     * @return string[]
+     */
+    protected function getWithRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations that can be counted.
+     *
+     * @return string[]
+     */
+    protected function getCountRelations(): array
+    {
+        return [];
+    }
+
+    /**
+     * Return the relations and the columns that should be sum.
+     *
+     * @return string[]
+     */
+    protected function getSumRelations(): array
+    {
+        // Separate the relation name using hyphen (`-`). For example, the string
+        // `published_posts-approved_votes` will be transformed into the code:
+        // `$query->withSum('PublishedPosts', 'approved_votes')`
+        return [];
+    }
+
+    /**
+     * Return the columns that can be used to sort the query.
+     *
+     * @return string[]
+     */
+    protected function getOrderByColumns(): array
+    {
+        return [];
+    }
+}
