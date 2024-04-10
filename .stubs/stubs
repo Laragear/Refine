@@ -30,8 +30,8 @@ namespace Illuminate\Database\Eloquent
          * Filter the Query using the current request and a filter class.
          *
          * @param  \Laragear\Refine\Refiner|string  $refiner
-         * * @param  array|null  $keys
-         * * @return $this
+         * @param  array|null  $keys
+         * @return $this
          */
         public function refineBy(Refiner|string $refiner, array $keys = null): static
         {
