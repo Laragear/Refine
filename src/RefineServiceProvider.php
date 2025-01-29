@@ -17,7 +17,7 @@ class RefineServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $callback = function (object|string $refiner, array $keys = null): BuilderContract|EloquentBuilderContract {
+        $callback = function (object|string $refiner, ?array $keys = null): BuilderContract|EloquentBuilderContract {
             /** @var \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Contracts\Database\Eloquent\Builder $this */
             return RefineQuery::refine($this, $refiner, $keys);
         };

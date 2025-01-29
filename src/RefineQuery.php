@@ -57,7 +57,7 @@ class RefineQuery
      *
      * @param  string[]|null  $keys
      */
-    public function match(array $keys = null): void
+    public function match(?array $keys = null): void
     {
         $this->refiner->runBefore($this->builder, $this->request);
 
@@ -198,7 +198,7 @@ class RefineQuery
     public static function refine(
         Builder|EloquentBuilder $builder,
         Refiner|string $refiner,
-        array $keys = null
+        ?array $keys = null
     ): Builder|EloquentBuilder {
         $instance = new static($builder, app('request'), is_string($refiner) ? app($refiner) : $refiner);
 
