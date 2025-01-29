@@ -19,6 +19,7 @@ class RefineServiceProvider extends ServiceProvider
     {
         $callback = function (object|string $refiner, ?array $keys = null): BuilderContract|EloquentBuilderContract {
             /** @var \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Contracts\Database\Eloquent\Builder $this */
+            // @phpstan-ignore-next-line
             return RefineQuery::refine($this, $refiner, $keys);
         };
 
