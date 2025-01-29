@@ -57,7 +57,7 @@ class RefineQuery
      *
      * @param  string[]|null  $keys
      */
-    public function match(array $keys = null): void
+    public function match(?array $keys = null): void
     {
         $this->refiner->runBefore($this->builder, $this->request);
 
@@ -84,8 +84,9 @@ class RefineQuery
         );
 
         if ($this->request->isPrecognitive()) {
-            $validator->after(Precognition::afterValidationHook($this->request))
-                ->setRules($this->request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders()));
+            $validator // @phpstan-ignore-line
+                ->after(Precognition::afterValidationHook($this->request))
+                ->setRules($this->request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders())); // @phpstan-ignore-line
         }
 
         $validator->validate();
@@ -198,7 +199,7 @@ class RefineQuery
     public static function refine(
         Builder|EloquentBuilder $builder,
         Refiner|string $refiner,
-        array $keys = null
+        ?array $keys = null
     ): Builder|EloquentBuilder {
         $instance = new static($builder, app('request'), is_string($refiner) ? app($refiner) : $refiner);
 
