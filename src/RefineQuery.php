@@ -84,10 +84,8 @@ class RefineQuery
         );
 
         if ($this->request->isPrecognitive()) {
-            $validator
-                // @phpstan-ignore-next-line
+            $validator // @phpstan-ignore-line
                 ->after(Precognition::afterValidationHook($this->request))
-                // @phpstan-ignore-next-line
                 ->setRules($this->request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders()));
         }
 
