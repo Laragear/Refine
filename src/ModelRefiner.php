@@ -174,8 +174,6 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
     {
         if ($columns = (array) $this->getQueryColumns()) {
             $query->where(function (EloquentBuilder $query) use ($search, $columns): void {
-                $query->whereKey($search);
-
                 if ($this->fullTextSearch) {
                     $query->orWhereFullText($columns, $search);
                 } else {
@@ -278,9 +276,8 @@ abstract class ModelRefiner extends Refiner implements ValidatesRefiner
      */
     public function trashed(EloquentBuilder $query, string $trashed): void
     {
-        if (in_array(Str::lower($trashed), ['1', 'true', 'on']) && $query->hasNamedScope(SoftDeletingScope::class)) {
-            // @phpstan-ignore-next-line
-            $query->withTrashed();
+        if (in_array(Str::lower($trashed), ['1', 'true', 'on']) && $query->hasMacro('withTrashed')) {
+            $query->withTrashed(); // @phpstan-ignore-line
         }
     }
 

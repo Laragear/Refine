@@ -76,20 +76,12 @@ class RefineQuery
      */
     protected function validateRefiner(): void
     {
-        $validator = app(ValidationFactory::class)->make(
+        app(ValidationFactory::class)->make(
             $this->request->query(),
             $this->refiner->validationRules(),
             $this->refiner->validationMessages(),
             $this->refiner->validationCustomAttributes()
-        );
-
-        if ($this->request->isPrecognitive()) {
-            $validator // @phpstan-ignore-line
-                ->after(Precognition::afterValidationHook($this->request))
-                ->setRules($this->request->filterPrecognitiveRules($validator->getRulesWithoutPlaceholders())); // @phpstan-ignore-line
-        }
-
-        $validator->validate();
+        )->validate();
     }
 
     /**
@@ -99,15 +91,17 @@ class RefineQuery
      */
     protected function queryValuesFromRequest(?array $keys): void
     {
+        $placeholder = (object)[];
+
         Collection::make($keys ?? $this->getKeysFromRefiner($this->request))
             // Transforms all items to $method => $key
             ->mapWithKeys(static function (string $key): array {
                 return [Str::camel($key) => $key];
             })
             // Remove all keys that are not present in the request query.
-            ->filter(function (string $key): bool {
+            ->filter(function (string $key) use ($placeholder): bool {
                 // @phpstan-ignore-next-line
-                return ($placeholder = (object) []) !== $this->request->query($key, $placeholder);
+                return $placeholder !== $this->request->query($key, $placeholder);
             })
             // Add "obligatory" keys set by the refiner that will always run.
             ->merge($this->getObligatoryKeysFromRefiner())

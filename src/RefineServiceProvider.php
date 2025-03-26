@@ -13,14 +13,15 @@ class RefineServiceProvider extends ServiceProvider
     public const STUBS = __DIR__.'/../.stubs/stubs';
 
     /**
-     * Boot the service provider.
+     * Register any application services.
+     *
+     * @return void
      */
-    public function boot(): void
+    public function register(): void
     {
         $callback = function (object|string $refiner, ?array $keys = null): BuilderContract|EloquentBuilderContract {
             /** @var \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Contracts\Database\Eloquent\Builder $this */
-            // @phpstan-ignore-next-line
-            return RefineQuery::refine($this, $refiner, $keys);
+            return RefineQuery::refine($this, $refiner, $keys); // @phpstan-ignore-line
         };
 
         if (! Builder::hasMacro('refineBy')) {
@@ -30,7 +31,13 @@ class RefineServiceProvider extends ServiceProvider
         if (! EloquentBuilder::hasGlobalMacro('refineBy')) {
             EloquentBuilder::macro('refineBy', $callback);
         }
+    }
 
+    /**
+     * Boot the service provider.
+     */
+    public function boot(): void
+    {
         if ($this->app->runningInConsole()) {
             $this->publishes([static::STUBS => $this->app->basePath('.stubs/refine-query.php')], 'phpstorm');
 

@@ -4,6 +4,7 @@ namespace Tests;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Laragear\Refine\Contracts\ValidatesRefiner;
 use Laragear\Refine\RefineQuery;
 use Laragear\Refine\Refiner;
@@ -48,11 +49,6 @@ class RefinerTest extends TestCase
         static::assertSame(['foo', 'bar'], $keys);
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_calls_run_before_with_request_and_builder(Closure $getQuery): void
     {
@@ -65,11 +61,6 @@ class RefinerTest extends TestCase
         $mock->shouldHaveReceived('runBefore')->with($builder, $this->app->make('request'))->once();
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_calls_run_after_with_request_and_builder(Closure $getQuery): void
     {
@@ -82,11 +73,6 @@ class RefinerTest extends TestCase
         $mock->shouldHaveReceived('runAfter')->with($builder, $this->app->make('request'))->once();
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_methods_from_request(Closure $getQuery): void
     {
@@ -103,11 +89,6 @@ class RefinerTest extends TestCase
         $mock->shouldNotHaveReceived('quz');
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_method_using_camel_Case(Closure $getQuery): void
     {
@@ -124,11 +105,6 @@ class RefinerTest extends TestCase
         $mock->shouldhaveReceived('qUZFOX')->with($builder, 3, $this->app->make('request'))->once();
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_doesnt_calls_non_callable_methods(Closure $getQuery): void
     {
@@ -146,11 +122,6 @@ class RefinerTest extends TestCase
         $mock->shouldNotHaveReceived('__destruct');
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_doesnt_calls_refiner_included_methods(Closure $getQuery): void
     {
@@ -165,11 +136,6 @@ class RefinerTest extends TestCase
         $mock->shouldNotHaveReceived('runAfter');
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_calls_matched_methods_from_request_using_custom_keys(Closure $getQuery): void
     {
@@ -186,11 +152,6 @@ class RefinerTest extends TestCase
         $mock->shouldNotHaveReceived('quz');
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_validates_refiner(Closure $getQuery): void
     {
@@ -207,11 +168,6 @@ class RefinerTest extends TestCase
         $builder->refineBy(MockValidatesRefiner::class, ['bar']);
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_doesnt_validates_refiner_if_doesnt_implement_interface(Closure $getQuery): void
     {
@@ -228,11 +184,6 @@ class RefinerTest extends TestCase
         $builder->refineBy(MockRefiner::class, ['bar']);
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_runs_obligatory_key_without_value(Closure $getQuery): void
     {
@@ -245,11 +196,6 @@ class RefinerTest extends TestCase
         static::assertNull(MockRefinerWithObligatoryKeys::$value);
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_runs_obligatory_key_with_value(Closure $getQuery): void
     {
@@ -262,11 +208,6 @@ class RefinerTest extends TestCase
         static::assertSame('value', MockRefinerWithObligatoryKeys::$value);
     }
 
-    /**
-     * @param  \Closure():\Illuminate\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $getQuery
-     *
-     * @dataProvider provideBuilders
-     */
     #[DataProvider('provideBuilders')]
     public function test_runs_obligatory_key_without_overriding(Closure $getQuery): void
     {
@@ -277,6 +218,25 @@ class RefinerTest extends TestCase
         $builder->refineBy(MockRefinerWithObligatoryKeys::class, ['bar']);
 
         static::assertNull(MockRefinerWithObligatoryKeys::$value);
+    }
+
+    #[DataProvider('provideBuilders')]
+    public function test_uses_validation_custom_Data(Closure $getQuery): void
+    {
+        $this->mockRequest(['foo' => '']);
+
+        $builder = $getQuery();
+
+        $this->expectException(ValidationException::class);
+
+        try {
+            $builder->refineBy(MockRefinerWithValidationData::class);
+        } catch (ValidationException $e) {
+            static::assertSame(['foo' => ['test-message test-foo']], $e->errors());
+
+            throw $e;
+        }
+
     }
 }
 
@@ -349,4 +309,28 @@ class MockRefinerWithObligatoryKeys extends MockRefiner
 
 class MockValidatesRefiner extends Refiner implements ValidatesRefiner
 {
+}
+
+class MockRefinerWithValidationData extends Refiner implements ValidatesRefiner
+{
+    public function validationRules(): array
+    {
+        return [
+            'foo' => 'required|string',
+        ];
+    }
+
+    public function validationMessages(): array
+    {
+        return [
+            'foo' => 'test-message :attribute'
+        ];
+    }
+
+    public function validationCustomAttributes(): array
+    {
+        return [
+            'foo' => 'test-foo',
+        ];
+    }
 }

@@ -2,7 +2,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laragear/refine.svg)](https://packagist.org/packages/laragear/refine)
 [![Latest stable test run](https://github.com/Laragear/Refine/workflows/Tests/badge.svg)](https://github.com/Laragear/Refine/actions)
 [![Codecov coverage](https://codecov.io/gh/Laragear/Refine/branch/1.x/graph/badge.svg?token=lJMZg5mdVy)](https://codecov.io/gh/Laragear/Refine)
-[![Maintainability](https://api.codeclimate.com/v1/badges/19ea8702c12213898a9c/maintainability)](https://codeclimate.com/github/Laragear/Refine/maintainability)
+[![Maintainability](https://qlty.sh/badges/8828e733-1029-4cc7-9578-c45351538287/maintainability.svg)](https://qlty.sh/gh/Laragear/projects/Refine)
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=Laragear_Refine&metric=alert_status)](https://sonarcloud.io/dashboard?id=Laragear_Refine)
 [![Laravel Octane Compatibility](https://img.shields.io/badge/Laravel%20Octane-Compatible-success?style=flat&logo=laravel)](https://laravel.com/docs/10.x/octane#introduction)
 
@@ -11,13 +11,11 @@ Filter a database query using the request query keys and matching methods.
 ```php
 // https://myblog.com/posts/?author_id=10
 
-class PostController
-{
-    public function all(Request $request)
-    {
-        return Post::refineBy(PostRefiner::class)->paginate()
-    }
-}
+use Illuminate\Support\Facades\Route;
+
+Route::get('/posts', function (Request $request) {
+    return Post::refineBy(PostRefiner::class)->paginate()
+});
 
 class PostRefiner
 {
@@ -27,15 +25,16 @@ class PostRefiner
     }
 }
 ```
+
 ## Become a sponsor
 
 [![](.github/assets/support.png)](https://github.com/sponsors/DarkGhostHunter)
 
-Your support allows me to keep this package free, up-to-date and maintainable. Alternatively, you can **[spread the word!](http://twitter.com/share?text=I%20am%20using%20this%20cool%20PHP%20package&url=https://github.com%2FLaragear%2FRefine&hashtags=PHP,Laravel)**
+Your support allows me to keep this package free, up-to-date and maintainable. Alternatively, you can **spread the word on social media!**.
 
 ## Requirements
 
-* Laravel 10 or later.
+* Laravel 11 or later.
 
 ## Installation
 
@@ -510,10 +509,10 @@ There should be no problems using this package with Laravel Octane.
 
 ## Security
 
-If you discover any security related issues, please email darkghosthunter@gmail.com instead of using the issue tracker.
+If you discover any security related issues, please [use the online form](https://github.com/Laragear/Refine/security).
 
 # License
 
 This specific package version is licensed under the terms of the [MIT License](LICENSE.md), at time of publishing.
 
-[Laravel](https://laravel.com) is a Trademark of [Taylor Otwell](https://github.com/TaylorOtwell/). Copyright © 2011-2024 Laravel LLC.
+[Laravel](https://laravel.com) is a Trademark of [Taylor Otwell](https://github.com/TaylorOtwell/). Copyright © 2011-2025 Laravel LLC.
