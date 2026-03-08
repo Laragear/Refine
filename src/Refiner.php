@@ -9,6 +9,19 @@ use Illuminate\Http\Request;
 abstract class Refiner
 {
     /**
+     * When true, the validation will throw an exception and stop the request.
+     */
+    public bool $fail = true;
+
+    /**
+     * Check if the validation should throw an exception if it fails.
+     */
+    public function shouldFail(): bool
+    {
+        return $this->fail;
+    }
+
+    /**
      * Return the keys to use to refine the query.
      *
      * @return string[]

@@ -1,10 +1,10 @@
 # Refiner
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/laragear/refine.svg)](https://packagist.org/packages/laragear/refine)
 [![Latest stable test run](https://github.com/Laragear/Refine/workflows/Tests/badge.svg)](https://github.com/Laragear/Refine/actions)
-[![Codecov coverage](https://codecov.io/gh/Laragear/Refine/branch/1.x/graph/badge.svg?token=lJMZg5mdVy)](https://codecov.io/gh/Laragear/Refine)
+[![Codecov coverage](https://codecov.io/gh/Laragear/Refine/graph/badge.svg?token=lJMZg5mdVy)](https://codecov.io/gh/Laragear/Refine)
 [![Maintainability](https://qlty.sh/badges/8828e733-1029-4cc7-9578-c45351538287/maintainability.svg)](https://qlty.sh/gh/Laragear/projects/Refine)
 [![Sonarcloud Status](https://sonarcloud.io/api/project_badges/measure?project=Laragear_Refine&metric=alert_status)](https://sonarcloud.io/dashboard?id=Laragear_Refine)
-[![Laravel Octane Compatibility](https://img.shields.io/badge/Laravel%20Octane-Compatible-success?style=flat&logo=laravel)](https://laravel.com/docs/10.x/octane#introduction)
+[![Laravel Octane Compatibility](https://img.shields.io/badge/Laravel%20Octane-Compatible-success?style=flat&logo=laravel)](https://laravel.com/docs/13.x/octane#introduction)
 
 Filter a database query using the request query keys and matching methods.
 
@@ -34,7 +34,8 @@ Your support allows me to keep this package free, up-to-date and maintainable. A
 
 ## Requirements
 
-* Laravel 11 or later.
+* PHP 8.3 or later
+* Laravel 12 or later
 
 ## Installation
 
@@ -275,7 +276,7 @@ class PostRefiner extends Refiner implements ValidatesRefiner
 
 > [!NOTE]
 > 
-> Validation rules will run verbatim over the Request Query, not the request input.
+> Validation rules will run verbatim over the request **query**, not the request input.
 
 ## Applying a Refiner
 
@@ -495,24 +496,71 @@ protected function getSumRelations(): array
 
 The above will make calls to the `userComments()` relation of the queried model.
 
+## Form Request Refiner
+
+For convenience, you can create a Request Refiner that will automatically validate and refine the request parameters. Failed or malformed query parameters will be silently discarded.
+
+First, create a Refined Request through the `make:refined-request` Artisan command, with a name. For example, if we plan to refine a request to show all the payments, we can name it as `PaymentRefinedRequest`.
+
+```shell
+php artisan make:refined-request PostRefinedRequest
+```
+
+You will receive a class at the `App\Http\Request\Refined` directory, based on the `Laragear\Refine\Http\Requests\RefinedRequest`. Here the only requirement is to set which Refiner you want to use to _refine_ the request.
+
+Since the class extends the native `Illuminate\Foundation\Http\FormRequest` class, you can also use validation and authorization rules.
+
+```php
+namespace App\Http\Requests\Refined;
+
+use App\Http\Refiners\PostRefiner;
+use App\Models\User;
+use Laragear\Refine\Http\Requests\RefinedRequest;
+
+class PostRefinedRequest extends RefinedRequest
+{
+    /**
+     * The refiner to execute. 
+     */
+    protected $refined = PostRefiner::class;
+    
+    public function authorize(User $user)
+    {
+        return $user->isCool();
+    }
+}
+```
+
+Then, you can refine the request using the `query()` method.
+
+```php
+use Illuminate\Support\Facades\Route;
+use App\Http\Requests\Refined\PostRefinedRequest;
+
+Route::get('payments/all', function (PostRefinedRequest $request) {
+    return $request->query()->paginate();
+})
+
+```
+
 ## Laravel Octane compatibility
 
 - There are no singletons using a stale application instance.
 - There are no singletons using a stale config instance.
 - There are no singletons using a stale request instance.
-- A static property being written is the cache of Refiner methods which grows by every unique Refiner that runs.
-- A static property being written is the cache of Abstract Refiner methods which is only written once.
+- A static property being written is the cache of Refiner methods that grows by every unique Refiner that runs.
+- A static property being written is the cache of Abstract Refiner methods that is only written once.
 
-The cached Refiner methods shouldn't grow uncontrollably, unless you have dozens of Refiner classes being called multiple times. In any case, you can always flush the cached refiner methods using the `RefineQuery::flushCachedRefinerMethods()`.
+The cached Refiner methods shouldn't grow uncontrollably unless you have dozens of Refiner classes being called multiple times. In any case, you can always flush the cached refiner methods using the `RefineQuery::flushCachedRefinerMethods()`.
 
 There should be no problems using this package with Laravel Octane.
 
 ## Security
 
-If you discover any security related issues, please [use the online form](https://github.com/Laragear/Refine/security).
+If you discover any security-related issues, please [use the online form](https://github.com/Laragear/Refine/security).
 
 # License
 
-This specific package version is licensed under the terms of the [MIT License](LICENSE.md), at time of publishing.
+This specific package version is licensed under the terms of the [MIT License](LICENSE.md), at the time of publishing.
 
-[Laravel](https://laravel.com) is a Trademark of [Taylor Otwell](https://github.com/TaylorOtwell/). Copyright © 2011-2025 Laravel LLC.
+[Laravel](https://laravel.com) is a Trademark of [Taylor Otwell](https://github.com/TaylorOtwell/). Copyright © 2011–2026 Laravel LLC.

@@ -10,7 +10,7 @@ use Illuminate\Support\ServiceProvider;
 
 class RefineServiceProvider extends ServiceProvider
 {
-    public const STUBS = __DIR__.'/../.stubs/stubs';
+    public const string STUBS = __DIR__.'/../.stubs/stubs';
 
     /**
      * Register any application services.
