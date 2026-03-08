@@ -90,7 +90,7 @@ class RefineQuery
      */
     protected function queryValuesFromRequest(?array $keys): void
     {
-        $placeholder = (object)[];
+        $placeholder = (object) [];
 
         Collection::make($keys ?? $this->getKeysFromRefiner($this->request))
             // Transforms all items to $method => $key
