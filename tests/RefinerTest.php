@@ -236,7 +236,6 @@ class RefinerTest extends TestCase
 
             throw $e;
         }
-
     }
 }
 
@@ -323,7 +322,7 @@ class MockRefinerWithValidationData extends Refiner implements ValidatesRefiner
     public function validationMessages(): array
     {
         return [
-            'foo' => 'test-message :attribute'
+            'foo' => 'test-message :attribute',
         ];
     }
 

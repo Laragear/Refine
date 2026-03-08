@@ -10,6 +10,7 @@ use Laragear\Refine\Refiner;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Fixtures\MockModel;
 use UnexpectedValueException;
+
 use function array_map;
 use function join;
 
@@ -267,7 +268,8 @@ class ModelRefinerTest extends TestCase
             $builder->toSql()
         );
 
-        $builder = (new class extends Model {
+        $builder = (new class extends Model
+        {
             protected $table = 'test_table';
         })->newQuery()->refineBy(MockModelRefinerWithFullTextSearch::class);
 
@@ -287,7 +289,7 @@ class ModelRefinerTest extends TestCase
         $builder->refineBy(MockModelRefinerWithFullTextSearch::class);
 
         static::assertSame(
-            "select * from `mock_models` where (match (`garply`) against (? in natural language mode)) and `mock_models`.`deleted_at` is null",
+            'select * from `mock_models` where (match (`garply`) against (? in natural language mode)) and `mock_models`.`deleted_at` is null',
             $builder->toSql()
         );
     }
